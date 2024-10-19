@@ -68,7 +68,7 @@ namespace MapStudio.UI
                 (*nativeConfig).RasterizerMultiply = 1f;
                 (*nativeConfig).GlyphOffset = new System.Numerics.Vector2(0);
 
-                io.Fonts.AddFontFromFileTTF($"{Runtime.ExecutableDir}/Lib/Fonts/Font.ttf", fontSize, nativeConfig);
+                io.Fonts.AddFontFromFileTTF($"{Runtime.ExecutableDir}/Lib/Fonts/msyh.ttf", fontSize, nativeConfig);
             }
 
             //Merge icon fonts. Important that this goes after the main target font being used so it can be merged.
@@ -77,6 +77,27 @@ namespace MapStudio.UI
                 MergeMode = 1,
                 PixelSnapH = 1,
             };
+
+            var chinese_font_width = $"{Runtime.ExecutableDir}/Lib/Fonts/chinese_font_width.txt";
+            try
+            {
+                if (File.Exists(chinese_font_width))
+                {
+                    var data = File.ReadAllText(chinese_font_width);
+                    data = data.Trim();
+                    config.GlyphMinAdvanceX = float.Parse(data);
+                }
+                else
+                {
+                    config.GlyphMinAdvanceX = 30;
+                }
+            }
+            catch
+            {
+                config.GlyphMinAdvanceX = 30;
+            }
+            AddFontFromFileTTF($"{Runtime.ExecutableDir}/Lib/Fonts/msyh.ttf", fontSize, config, io.Fonts.GetGlyphRangesChineseFull());
+
             char min = Convert.ToChar(0xe000);
             char max = Convert.ToChar(0xe0fe);
 
