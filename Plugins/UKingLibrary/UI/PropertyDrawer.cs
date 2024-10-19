@@ -321,33 +321,70 @@ namespace UKingLibrary.UI
             }
         }
 
-        static void LoadProperties(IDictionary<string, dynamic> properties, PropertyChangedCallback callback = null)
-        {
-            foreach (var pair in properties.ToList())
-            {
+static void LoadProperties(IDictionary<string, dynamic> properties, PropertyChangedCallback callback = null)
+{
+    foreach (var pair in properties.ToList())
+    {
                 //Skip lists, scale, and rotate properties as they are loaded in the UI in other places
-                if (pair.Key == "!Parameters" || pair.Key == "Scale" || pair.Key == "Translate" || pair.Key == "Rotate")
-                    continue;
+        if (pair.Key == "!Parameters" || pair.Key == "Scale" || pair.Key == "Translate" || pair.Key == "Rotate")
+            continue;
 
-                if (pair.Value is IList<dynamic>)
-                    continue;
+        if (pair.Value is IList<dynamic>)
+            continue;
 
-                if (pair.Value is MapData.Property<dynamic> && pair.Value.Invalid)
-                {
-                    Vector2 p_min = ImGui.GetCursorScreenPos();
-                    Vector2 p_max = new Vector2(p_min.X + ImGui.GetContentRegionAvail().X, p_min.Y + ImGui.GetFrameHeight());
-                    ImGui.GetWindowDrawList().AddRectFilled(p_min, p_max, ImGui.GetColorU32(new Vector4(0.7f, 0, 0, 1)));
-                }
-
-                ImGui.Text(pair.Key);
-                ImGui.NextColumn();
-
-                DrawPropertiesDynamic(properties, pair.Key, pair.Value, callback);
-
-
-                ImGui.NextColumn();
-            }
+        if (pair.Value is MapData.Property<dynamic> && pair.Value.Invalid)
+        {
+            Vector2 p_min = ImGui.GetCursorScreenPos();
+            Vector2 p_max = new Vector2(p_min.X + ImGui.GetContentRegionAvail().X, p_min.Y + ImGui.GetFrameHeight());
+            ImGui.GetWindowDrawList().AddRectFilled(p_min, p_max, ImGui.GetColorU32(new Vector4(0.7f, 0, 0, 1)));
         }
+
+        // Display property type and name with additional spacing
+        ImGui.Text($"{GetPropertyTypeName(pair.Value)} :");
+        ImGui.SameLine(80); // Adjust the value to control the spacing between type and name
+        ImGui.Text(pair.Key);
+        
+
+        ImGui.NextColumn();
+
+        DrawPropertiesDynamic(properties, pair.Key, pair.Value, callback);
+
+
+        ImGui.NextColumn();
+    }
+}
+
+static string GetPropertyTypeName(dynamic value)
+{
+    if (value == null)
+        return "<NULL>";
+
+    if (value is MapData.Property<dynamic> prop)
+        value = prop.Value;
+
+    Type type = value.GetType();
+
+    if (type == typeof(float))
+        return "Float";
+    if (type == typeof(double))
+        return "Double";
+    if (type == typeof(int))
+        return "Int";
+    if (type == typeof(uint))
+        return "Uint";
+    if (type == typeof(string))
+        return "String";
+    if (type == typeof(bool))
+        return "Bool";
+    if (IsXYZ(value))
+        return "Float3"; // Assuming XYZ is a Float3
+    if (type == typeof(long))
+        return "Long";
+    if (type == typeof(ulong))
+        return "ULong";
+
+    return "<UNKNOWN>";
+}
 
         static void DrawPropertiesDynamic(IDictionary<string, dynamic> properties, string key, dynamic value, PropertyChangedCallback callback = null)
         {
