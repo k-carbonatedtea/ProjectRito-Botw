@@ -155,7 +155,7 @@ namespace AGraphicsLibrary
             if (errorcheck != FramebufferErrorCode.FramebufferComplete)
                 throw new Exception(errorcheck.ToString());
 
-            frameBuffer.Dispoe();
+            frameBuffer.Dispose();
             frameBuffer.DisposeRenderBuffer();
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

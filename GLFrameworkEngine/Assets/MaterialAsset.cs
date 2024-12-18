@@ -96,7 +96,7 @@ namespace GLFrameworkEngine
             var thumbnail = frameBuffer.ReadImagePixels(true);
 
             //Dispose frame buffer
-            frameBuffer.Dispoe();
+            frameBuffer.Dispose();
             frameBuffer.DisposeRenderBuffer();
 
             this.Thumbnail = thumbnail;

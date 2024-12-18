@@ -94,7 +94,7 @@ namespace MapStudio.UI
             return image.ID;
 
          /*   //Dispose frame buffer
-            frameBuffer.Dispoe();
+            frameBuffer.Dispose();
             frameBuffer.DisposeRenderBuffer();*/
         }
     }

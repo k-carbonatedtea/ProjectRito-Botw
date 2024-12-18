@@ -90,7 +90,7 @@ namespace UKingLibrary.UI
 
         static void Cleanup()
         {
-            Framebuffer?.Dispoe();
+            Framebuffer?.Dispose();
             GL.Disable(EnableCap.FramebufferSrgb);
             GC.Collect();
         }

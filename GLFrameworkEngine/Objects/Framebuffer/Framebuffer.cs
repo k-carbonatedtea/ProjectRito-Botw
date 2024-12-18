@@ -67,7 +67,7 @@ namespace GLFrameworkEngine
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
 
-        public void Dispoe() {
+        public void Dispose() {
             GL.DeleteFramebuffer(ID);
         }
 

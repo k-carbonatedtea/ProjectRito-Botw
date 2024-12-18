@@ -94,7 +94,7 @@ namespace AGraphicsLibrary
             GL.Enable(EnableCap.CullFace);
             GL.Enable(EnableCap.Blend);
 
-            frameBuffer.Dispoe();
+            frameBuffer.Dispose();
             frameBuffer.DisposeRenderBuffer();
 
             GL.UseProgram(0);

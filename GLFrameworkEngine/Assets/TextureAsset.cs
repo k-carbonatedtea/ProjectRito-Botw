@@ -51,7 +51,7 @@ namespace GLFrameworkEngine
             thumbnail.RotateFlip(System.Drawing.RotateFlipType.RotateNoneFlipY);
 
             //Dispose frame buffer
-            frameBuffer.Dispoe();
+            frameBuffer.Dispose();
             frameBuffer.DisposeRenderBuffer();
 
             this.Thumbnail = thumbnail;
