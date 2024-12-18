@@ -7,6 +7,7 @@ using Toolbox.Core;
 using GLFrameworkEngine;
 using System.Reflection;
 using MapStudio.UI;
+using HackOpenGL;
 
 namespace MapStudio
 {
@@ -28,6 +29,9 @@ namespace MapStudio
             else
                 ConsoleWindowUtil.Show();
             #endif
+
+             // 默认：选择 NVIDIA 显卡
+            OpenGLVendorSelector.ChooseOpenGLVendor(OpenGLVendorSelector.VENDOR_NVIDIA);
 
             //Assembly searching from folders
             var domain = AppDomain.CurrentDomain;
