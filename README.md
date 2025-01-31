@@ -17,8 +17,8 @@ MapStudio is a workspace for editing Nintendo map formats, with flexibility as a
 
 ```
 cd [some folder you want rito to be in]
-git clone https://github.com/Project-Rito/ProjectRito-Dev
-cd ./ProjectRito-Dev
+git clone https://github.com/k-carbonatedtea/ProjectRito-Botw
+cd ./ProjectRito-Botw
 git submodule update --init --recursive
 dotnet build -c Debug /p:Platform=x64
 ```
