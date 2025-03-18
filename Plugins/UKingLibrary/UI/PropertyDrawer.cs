@@ -147,6 +147,10 @@ namespace UKingLibrary.UI
             ImGui.NextColumn();
         }
 
+        static int addLinkHashId = 0;
+        static int selectedLinkType = 0;
+        static Dictionary<int, string> hashIdErrors = new Dictionary<int, string>();
+
         // A dialog to add/remove links
         static void LinksDialog(List<MapObject.LinkInstance> links, MapObject mapObject)
         {
@@ -161,24 +165,48 @@ namespace UKingLibrary.UI
 
                 ImGui.SameLine();
                 ImGui.PushItemWidth(100);
-                if (ImGui.Button(TranslationSource.GetText("ADD")))
+                if (ImGui.Button($"{TranslationSource.GetText("ADD")}"))
                 {
-                    MapObject.LinkInstance link = new MapObject.LinkInstance(
-                        (uint)addLinkHashId, 
-                        new Dictionary<string, dynamic>()
-                        {
-                            { "!Parameters", new Dictionary<string, dynamic>() },
-                            { "DefinitionName", new MapData.Property<dynamic>(LinkTypes[selectedLinkType]) },
-                            { "DestUnitHashId", new MapData.Property<dynamic>((uint)addLinkHashId) }
-                        }
-                    );
-                    link.Object.SourceLinks.Add(new MapObject.LinkInstance()
+                    // Try to find the target object
+                    var targetObject = ((UKingEditor)Workspace.ActiveWorkspace.ActiveEditor).ActiveMapLoader.MapObjectByHashId((uint)addLinkHashId);
+                    if (targetObject != null)
                     {
-                        Properties = link.Properties,
-                        Object = mapObject
-                    });
-                    mapObject.Render.DestObjectLinks.Add(link.Object.Render);
-                    links.Add(link);
+                        hashIdErrors.Remove(addLinkHashId); // Clear error if exists
+
+                        MapObject.LinkInstance link = new MapObject.LinkInstance(
+                            (uint)addLinkHashId, 
+                            new Dictionary<string, dynamic>()
+                            {
+                                { "!Parameters", new Dictionary<string, dynamic>() },
+                                { "DefinitionName", new MapData.Property<dynamic>(LinkTypes[selectedLinkType]) },
+                                { "DestUnitHashId", new MapData.Property<dynamic>((uint)addLinkHashId) }
+                            }
+                        );
+
+                        link.Object = targetObject;
+                        link.Object.SourceLinks.Add(new MapObject.LinkInstance()
+                        {
+                            Properties = link.Properties,
+                            Object = mapObject
+                        });
+                        mapObject.Render.DestObjectLinks.Add(link.Object.Render);
+                        links.Add(link);
+                    }
+                    else
+                    {
+                        // Store error for this hash ID
+                        hashIdErrors[addLinkHashId] = $"Error: Could not find object with HashId {addLinkHashId}";
+                    }
+                }
+                ImGui.PopItemWidth();
+
+                // Show error if exists for addLinkHashId
+                if (hashIdErrors.ContainsKey(addLinkHashId))
+                {
+                    Vector2 p_min = ImGui.GetCursorScreenPos();
+                    Vector2 p_max = new Vector2(p_min.X + ImGui.GetContentRegionAvail().X, p_min.Y + ImGui.GetFrameHeight());
+                    ImGui.GetWindowDrawList().AddRectFilled(p_min, p_max, ImGui.GetColorU32(new Vector4(0.7f, 0, 0, 1)));
+                    ImGui.Text(hashIdErrors[addLinkHashId]);
                 }
             }
 
@@ -198,26 +226,52 @@ namespace UKingLibrary.UI
 
                     int editLinkHashId = (int)link.Properties["DestUnitHashId"].Value;
                     ImGui.InputInt($"##editlinkid##{link.Properties["DefinitionName"].Value}{link.Properties["DestUnitHashId"].Value}", ref editLinkHashId, 0, 0, ImGuiInputTextFlags.CharsDecimal);
+
                     if (editLinkHashId != (int)link.Properties["DestUnitHashId"].Value)
                     {
-                        link.Object.SourceLinks.RemoveAll(x => x.Properties["DestUnitHashId"].Value == mapObject.HashId);
-                        mapObject.Render.DestObjectLinks.Remove(link.Object.Render);
-                        link.Object = ((UKingEditor)Workspace.ActiveWorkspace.ActiveEditor).ActiveMapLoader.MapObjectByHashId((uint)editLinkHashId);
-                        link.Object.SourceLinks.Add(new MapObject.LinkInstance()
+                        var targetObject = ((UKingEditor)Workspace.ActiveWorkspace.ActiveEditor).ActiveMapLoader.MapObjectByHashId((uint)editLinkHashId);
+                        if (targetObject != null)
                         {
-                            Properties = link.Properties,
-                            Object = mapObject
-                        });
-                        mapObject.Render.DestObjectLinks.Add(link.Object.Render);
+                            hashIdErrors.Remove(editLinkHashId); // Clear error if exists
+
+                            link.Object.SourceLinks.RemoveAll(x => x.Properties["DestUnitHashId"].Value == mapObject.HashId);
+                            mapObject.Render.DestObjectLinks.Remove(link.Object.Render);
+                            link.Object = targetObject;
+                            link.Object.SourceLinks.Add(new MapObject.LinkInstance()
+                            {
+                                Properties = link.Properties,
+                                Object = mapObject
+                            });
+                            mapObject.Render.DestObjectLinks.Add(link.Object.Render);
+                            link.Properties["DestUnitHashId"] = new MapData.Property<dynamic>((uint)editLinkHashId);
+                        }
+                        else
+                        {
+                            // Store error for this hash ID
+                            hashIdErrors[editLinkHashId] = $"Error: Could not find object with HashId {editLinkHashId}";
+                        }
                     }
-                    link.Properties["DestUnitHashId"] = new MapData.Property<dynamic>((uint)editLinkHashId);
+
+                    // Show error if exists for editLinkHashId
+                    if (hashIdErrors.ContainsKey(editLinkHashId))
+                    {
+                        ImGui.Spacing();
+                        Vector2 p_min = ImGui.GetCursorScreenPos();
+                        Vector2 p_max = new Vector2(p_min.X + ImGui.GetColumnWidth(), p_min.Y + ImGui.GetFrameHeight());
+                        ImGui.GetWindowDrawList().AddRectFilled(p_min, p_max, ImGui.GetColorU32(new Vector4(0.7f, 0, 0, 1)));
+                        ImGui.Text(hashIdErrors[editLinkHashId]);
+                    }
 
                     ImGui.NextColumn();
 
                     ImGui.PushItemWidth(80);
 
                     if (ImGui.Button($"Remove##{link.Properties["DefinitionName"].Value}{link.Properties["DestUnitHashId"].Value}"))
+                    {
                         removedLinks.Add(link);
+                        // Clear any errors for this hash ID when removing the link
+                        hashIdErrors.Remove((int)link.Properties["DestUnitHashId"].Value);
+                    }
 
                     ImGui.PopItemWidth();
 
@@ -238,10 +292,6 @@ namespace UKingLibrary.UI
         }
 
         static List<MapObject.LinkInstance> removedLinks = new List<MapObject.LinkInstance>();
-
-        static int addLinkHashId = 0;
-
-        static int selectedLinkType = 0;
 
         static string[] LinkTypes = new string[] // Loll this list goes on foreverrrrr
         {
@@ -315,6 +365,7 @@ namespace UKingLibrary.UI
                     ImGui.NextColumn();
 
                     DrawPropertiesDynamic(properties, pair.Key, pair.Value);
+
 
                     ImGui.NextColumn();
 
