@@ -659,11 +659,17 @@ namespace UKingLibrary
         void LoadObjectTransform()
         {
             Render.Transform.Position = LoadVector("Translate", Vector3.Zero) * GLContext.PreviewScale;
-            Render.Transform.RotationEuler = LoadVector("Rotate", Vector3.Zero, true);
+            
+            // 加载旋转值并保存原始值以便以后保存
+            Vector3 rotationEuler = LoadVector("Rotate", Vector3.Zero, true);
+            Render.Transform.RotationEuler = rotationEuler;
+            _rotationEuler = rotationEuler; // 保存原始旋转值
+            
             Render.Transform.Scale = LoadVector("Scale", Vector3.One);
             Render.Transform.UpdateMatrix(true);
             //Make updates to SRT hash on update
             Render.Transform.TransformUpdated += delegate {
+                _rotationEuler = Render.Transform.RotationEuler; // 更新旋转值
                 CalculateSRTHash();
             };
         }
@@ -709,9 +715,13 @@ namespace UKingLibrary
             Properties.Remove("Translate");
             Properties.Remove("Rotate");
             Properties.Remove("Scale");
+            
             SaveVector("Translate", Render.Transform.Position / GLContext.PreviewScale, true, false);
-            if (Render.Transform.RotationEuler != Vector3.Zero)
-                SaveVector("Rotate", Render.Transform.RotationEuler, false, true);
+            
+            // 使用保存的原始旋转值
+            if (_rotationEuler != Vector3.Zero)
+                SaveVector("Rotate", _rotationEuler, false, true);
+                
             if (Render.Transform.Scale != Vector3.One)
                 SaveVector("Scale", Render.Transform.Scale);
         }
@@ -738,8 +748,18 @@ namespace UKingLibrary
                 //Single rotation on the up axis
                 Properties[key] = new MapData.Property<dynamic>(value.Y);
             }
+            else if (isRotation)
+            {
+                // 始终以数组形式保存旋转值，确保X、Y、Z三个分量保持原样
+                Properties[key] = new List<dynamic>()
+                {
+                    new MapData.Property<dynamic>(value.X),
+                    new MapData.Property<dynamic>(value.Y),
+                    new MapData.Property<dynamic>(value.Z),
+                };
+            }
             else if (!isTransform && value.IsUniform())
-                Properties [key] = new MapData.Property<dynamic>(value.X);
+                Properties[key] = new MapData.Property<dynamic>(value.X);
             else
             {
                 Properties[key] = new List<dynamic>()
